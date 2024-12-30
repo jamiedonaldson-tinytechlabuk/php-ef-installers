@@ -1,4 +1,4 @@
-# php-ef-installers
+# PHP-ef-installers
 PHP-EF Installation methods for the installation of PHP-EF from the following repository: 
 [Mat Cox Repo](https://github.com/TehMuffinMoo/php-ef)
 
@@ -35,7 +35,7 @@ Admin123!
 ```
 
 ## Automation tools installation for PHP-ef
-If you want to deploy PHP-ef using automation tools, you can use the following YAML file:
+If you want to deploy PHP-ef using automation tools such as Ansible, you can use the following YAML file:
 
 Oracle Linux 9:
 [View the DockerCE_InfraPortal_Install.yml file](https://github.com/jamiedonaldson-tinytechlabuk/php-ef-installers/blob/main/DockerCE_InfraPortal_Install.yml)

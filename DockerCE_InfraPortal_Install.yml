@@ -1,5 +1,5 @@
 ---
-- name: Install Docker, Docker Compose, and Configure PHP-ef Service on Oracle Linux 9
+- name: Install Docker, Docker Compose, and Configure PHP-ef Service
   hosts: "{{ name }}"
   become: yes
 
@@ -9,27 +9,64 @@
     config_url: "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/inc/config/config.json.example"
 
   tasks:
-    - name: Install required packages for Docker
+    - name: Install required packages for Docker (RHEL/Oracle)
       yum:
         name:
           - yum-utils
           - device-mapper-persistent-data
           - lvm2
         state: present
+      when: ansible_os_family == "RedHat"
 
-    - name: Set up Docker repository
+    - name: Install required packages for Docker (Debian/Ubuntu)
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Add Docker GPG key (Debian/Ubuntu)
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Add Docker repository (Debian/Ubuntu)
+      apt_repository:
+        repo: "deb [arch={{ ansible_architecture }}] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Set up Docker repository (RHEL/Oracle)
       command: |
         dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
       args:
         creates: /etc/yum.repos.d/docker-ce.repo
+      when: ansible_os_family == "RedHat"
 
-    - name: Install Docker
+    - name: Install Docker (RHEL/Oracle)
       yum:
         name:
           - docker-ce
           - docker-ce-cli
           - containerd.io
         state: latest
+      when: ansible_os_family == "RedHat"
+
+    - name: Install Docker (Debian/Ubuntu)
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: latest
+        update_cache: yes
+      when: ansible_os_family == "Debian"
 
     - name: Enable and start Docker service
       systemd:
@@ -126,5 +163,17 @@
         user: root
         minute: "0"
         hour: "0"
-        job: "docker compose pull && docker compose down && docker compose up -d"
+        job: "cd /docker && docker compose pull && docker compose down && docker compose up -d"
         state: present
+
+    - name: Wait for container to be ready
+      wait_for:
+        port: 80
+        timeout: 30
+
+    - name: Print installation complete message
+      debug:
+        msg: 
+          - "PHP-ef installation completed successfully"
+          - "Access the web interface at http://{{ ansible_host }}"
+          - "HWID: {{ hwid }}"
