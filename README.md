@@ -6,6 +6,12 @@ PHP-EF Installation methods for the following repo:
 # Installation Script for PHP-ef
 
 The following Script will install Docker-CE/Docker Compose and make all relevant changes/customisations.
+
+## Supported OS currently are:
+- Oracle Linux 9
+- RHEL 9
+- Debian (22.04+24.04)
+
 Use the following script to install PHP-ef on your server:
 
 ```bash
