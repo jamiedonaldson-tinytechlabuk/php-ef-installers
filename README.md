@@ -16,7 +16,9 @@ Use the following script to install PHP-ef on your server:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/jamiedonaldson-tinytechlabuk/php-ef-installers/main/Installing-php-ef.sh | bash
+```
 
+```
 ## Note that the script will autogenerate HWID and Security Salt for the Installation:
 - Security Salt
 - HWID
