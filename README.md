@@ -18,13 +18,20 @@ Use the following script to install PHP-ef on your server:
 curl -fsSL https://raw.githubusercontent.com/jamiedonaldson-tinytechlabuk/php-ef-installers/main/Installing-php-ef.sh | bash
 ```
 
-```
+
 ## Note that the script will autogenerate HWID and Security Salt for the Installation:
 - Security Salt
 - HWID
 
-Default Username: admin
-Default Password: Admin123!
+## Default credentials for the installation are:
+### Username:
+```
+admin
+```
+
+### Password:
+```
+Admin123!
 ```
 
 ## Automation tools installation for PHP-ef
