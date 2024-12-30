@@ -1,0 +1,130 @@
+---
+- name: Install Docker, Docker Compose, and Configure PHP-ef Service on Oracle Linux 9
+  hosts: "{{ name }}"
+  become: yes
+
+  vars:
+    hwid: "{{ lookup('password', '/dev/null length=24') }}"
+    security_salt: "{{ lookup('password', '/dev/null length=30') }}"
+    config_url: "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/inc/config/config.json.example"
+
+  tasks:
+    - name: Install required packages for Docker
+      yum:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+        state: present
+
+    - name: Set up Docker repository
+      command: |
+        dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        creates: /etc/yum.repos.d/docker-ce.repo
+
+    - name: Install Docker
+      yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: latest
+
+    - name: Enable and start Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Install Docker Compose
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-{{ ansible_system | lower }}-{{ ansible_architecture }}"
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+
+    - name: Verify Docker Compose installation
+      command: docker compose --version
+      register: docker_compose_version
+      failed_when: docker_compose_version.rc != 0
+
+    - name: Add current user to Docker group
+      user:
+        name: "awx"
+        groups: docker
+        append: yes
+
+    - name: Test Docker installation
+      command: docker run hello-world
+      register: docker_test
+      failed_when: "'Hello from Docker!' not in docker_test.stdout"
+
+    - name: Create /docker directory
+      file:
+        path: /docker
+        state: directory
+        mode: '0755'
+
+    - name: Create /docker/php-ef directory
+      file:
+        path: /docker/php-ef
+        state: directory
+        mode: '0755'
+
+    - name: Create /docker/php-ef/config directory
+      file:
+        path: /docker/php-ef/config
+        state: directory
+        mode: '0755'
+
+    - name: Set ownership of /docker/php-ef
+      file:
+        path: /docker/php-ef
+        owner: nobody
+        group: nobody
+        recurse: yes
+
+    - name: Download config.json.example to /docker/php-ef/config
+      get_url:
+        url: "{{ config_url }}"
+        dest: /docker/php-ef/config/config.json
+        mode: '0644'
+
+    - name: Replace salt in config.json
+      replace:
+        path: /docker/php-ef/config/config.json
+        regexp: '"somesupersecurepasswordhere"'
+        replace: '"{{ security_salt }}"'
+
+    - name: Create Docker Compose file with random HWID
+      copy:
+        dest: /docker/docker-compose.yml
+        content: |
+          version: '3'
+          services:
+            php-ef:
+              image: ghcr.io/tehmuffinmoo/php-ef:dev
+              ports:
+                - 80:8080
+              environment:
+                HWID: "{{ hwid }}"
+                LOGLEVEL: INFO
+              restart: always
+              volumes:
+                - ./php-ef/config:/var/www/html/inc/config
+                - ./php-ef/plugins:/var/www/html/inc/plugins
+        mode: '0644'
+
+    - name: Start the PHP-ef container using Docker Compose
+      command: docker compose up -d
+      args:
+        chdir: /docker
+
+    - name: Create a daily cron job to update and restart Docker Compose services
+      cron:
+        name: "Update and restart PHP-ef services"
+        user: root
+        minute: "0"
+        hour: "0"
+        job: "docker compose pull && docker compose down && docker compose up -d"
+        state: present
