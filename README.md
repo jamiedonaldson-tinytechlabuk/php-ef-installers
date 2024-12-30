@@ -1,7 +1,6 @@
 # php-ef-installers
 PHP-EF Installation methods for the following repo: 
-https://github.com/TehMuffinMoo/php-ef
-
+[Mat Cox Repo](https://github.com/TehMuffinMoo/php-ef)
 
 
 # Installation Script for PHP-ef
