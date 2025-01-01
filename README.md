@@ -10,12 +10,13 @@ The following Script will install Docker-CE/Docker Compose and make all relevant
 ## Supported OS currently are:
 - Oracle Linux 9
 - RHEL 9
-- Debian (22.04+24.04)
+- Debian
+- Ubuntu (22.04+24.04)
 
 Use the following script to install PHP-ef on your server:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/jamiedonaldson-tinytechlabuk/php-ef-installers/main/Installing-php-ef.sh | bash
+curl -fsSL https://raw.githubusercontent.com/tinytechlabuk/php-ef-installers/main/Installing-php-ef.sh | bash
 ```
 
 
@@ -38,20 +39,20 @@ Admin123!
 If you want to deploy PHP-ef using automation tools such as Ansible, you can use the following YAML file:
 
 Oracle Linux 9:
-[View the DockerCE_InfraPortal_Install.yml file](https://github.com/jamiedonaldson-tinytechlabuk/php-ef-installers/blob/main/DockerCE_InfraPortal_Install.yml)
+[View the DockerCE_InfraPortal_Install.yml file](https://github.com/tinytechlabuk/php-ef-installers/blob/main/DockerCE_InfraPortal_Install.yml)
 
 RHEL 9:
-[View the DockerCE_InfraPortal_Install.yml file](https://github.com/jamiedonaldson-tinytechlabuk/php-ef-installers/blob/main/DockerCE_InfraPortal_Install.yml)
+[View the DockerCE_InfraPortal_Install.yml file](https://github.com/tinytechlabuk/php-ef-installers/blob/main/DockerCE_InfraPortal_Install.yml)
 
 
 Debian 11:
-[View the DockerCE_InfraPortal_Install.yml file](https://github.com/jamiedonaldson-tinytechlabuk/php-ef-installers/blob/main/DockerCE_InfraPortal_Install.yml)  
+[View the DockerCE_InfraPortal_Install.yml file](https://github.com/tinytechlabuk/php-ef-installers/blob/main/DockerCE_InfraPortal_Install.yml)  
 
 Ubuntu 22.04:
-[View the DockerCE_InfraPortal_Install.yml file](https://github.com/jamiedonaldson-tinytechlabuk/php-ef-installers/blob/main/DockerCE_InfraPortal_Install.yml)
+[View the DockerCE_InfraPortal_Install.yml file](https://github.com/tinytechlabuk/php-ef-installers/blob/main/DockerCE_InfraPortal_Install.yml)
 
 For direct use, you can fetch it using the raw file link:
 
 ```bash
-curl -O https://raw.githubusercontent.com/jamiedonaldson-tinytechlabuk/php-ef-installers/main/DockerCE_InfraPortal_Install.yml
+curl -O https://raw.githubusercontent.com/tinytechlabuk/php-ef-installers/main/DockerCE_InfraPortal_Install.yml
 
