@@ -7,7 +7,11 @@ detect_os() {
     elif [ -f /etc/redhat-release ]; then
         echo "rhel"
     elif [ -f /etc/debian_version ]; then
-        echo "debian"
+        if [ -f /etc/lsb-release ] && grep -q "Ubuntu" /etc/lsb-release; then
+            echo "ubuntu"
+        else
+            echo "debian"
+        fi
     else
         echo "unsupported"
     fi
@@ -27,7 +31,7 @@ install_docker() {
         sudo yum install -y yum-utils device-mapper-persistent-data lvm2
         sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
         sudo yum install -y docker-ce docker-ce-cli containerd.io
-    elif [ "$OS" = "debian" ]; then
+    elif [ "$OS" = "debian" ] || [ "$OS" = "ubuntu" ]; then
         sudo apt-get update
         sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
         curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -119,18 +123,25 @@ install_local() {
         sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/nginx.conf" -o /etc/nginx/nginx.conf
         sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/conf.d/default.conf" -o /etc/nginx/conf.d/default.conf
 
-    elif [ "$OS" = "debian" ]; then
-        echo "Installing dependencies for Debian-based system..."
+    elif [ "$OS" = "debian" ] || [ "$OS" = "ubuntu" ]; then
+        echo "Installing dependencies for Debian/Ubuntu system..."
+        
+        # For Ubuntu, we need to add PHP repository
+        if [ "$OS" = "ubuntu" ]; then
+            sudo apt-get update
+            sudo apt-get install -y software-properties-common
+            sudo add-apt-repository -y ppa:ondrej/php
+        fi
+        
         sudo apt-get update
         sudo apt-get install -y \
             curl \
             composer \
             php8.3 \
             php8.3-ldap \
-            php8.3-ctype \
+            php8.3-common \
             php8.3-sqlite3 \
-            php8.3-pdo \
-            php8.3-pdo-sqlite \
+            php8.3-mysql \
             php8.3-curl \
             php8.3-dom \
             php8.3-fileinfo \
@@ -138,15 +149,15 @@ install_local() {
             php8.3-gd \
             php8.3-intl \
             php8.3-mbstring \
-            php8.3-mysqli \
             php8.3-opcache \
             php8.3-xml \
+            php8.3-zip \
             nginx \
-            redis \
+            redis-server \
             git \
             supervisor
 
-        # Configure NGINX for Debian
+        # Configure NGINX for Debian/Ubuntu
         sudo mkdir -p /etc/nginx/conf.d
         sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/nginx.conf" -o /etc/nginx/nginx.conf
         sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/conf.d/default.conf" -o /etc/nginx/conf.d/default.conf
@@ -163,7 +174,7 @@ install_local() {
 
     # Configure PHP-FPM
     echo "Configuring PHP-FPM..."
-    if [ "$OS" = "debian" ]; then
+    if [ "$OS" = "debian" ] || [ "$OS" = "ubuntu" ]; then
         PHP_VERSION="8.3"
         PHP_INI_DIR="/etc/php/$PHP_VERSION"
     else
@@ -234,7 +245,7 @@ migrate_to_docker() {
 main() {
     OS=$(detect_os)
     if [ "$OS" = "unsupported" ]; then
-        echo "Unsupported OS. Only Oracle Linux, RHEL-based, and Debian-based distributions are supported."
+        echo "Unsupported OS. Only Oracle Linux, RHEL-based, Debian-based, and Ubuntu-based distributions are supported."
         exit 1
     fi
 
