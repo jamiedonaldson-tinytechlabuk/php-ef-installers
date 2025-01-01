@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Ensure script can handle being piped
+exec < /dev/tty
+
 # Function to detect OS
 detect_os() {
     if [ -f /etc/oracle-release ]; then
@@ -254,7 +257,15 @@ main() {
     echo "1) Docker Installation (Recommended)"
     echo "2) Local Installation (Automated)"
     echo "3) Migrate Existing Installation to Docker"
-    read -p "Enter your choice (1-3): " CHOICE
+    
+    # Ensure we can read user input even when piped
+    CHOICE=""
+    while [[ ! $CHOICE =~ ^[1-3]$ ]]; do
+        read -p "Enter your choice (1-3): " CHOICE
+        if [[ ! $CHOICE =~ ^[1-3]$ ]]; then
+            echo "Please enter a valid choice (1, 2, or 3)"
+        fi
+    done
 
     case $CHOICE in
         1)
