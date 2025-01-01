@@ -16,7 +16,11 @@ The following Script will install Docker-CE/Docker Compose and make all relevant
 Use the following script to install PHP-ef on your server:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tinytechlabuk/php-ef-installers/main/Installing-php-ef.sh | bash
+# Step 1: Download the script
+curl -fsSL https://raw.githubusercontent.com/tinytechlabuk/php-ef-installers/main/Installing-php-ef.sh -o install.sh
+
+# Step 2: Make it executable and run it
+chmod +x install.sh && ./install.sh
 ```
 
 
