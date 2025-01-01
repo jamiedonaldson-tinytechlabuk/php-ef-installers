@@ -253,8 +253,8 @@ main() {
     echo "Please select installation type:"
     echo "1) Docker Installation (Recommended)"
     echo "2) Local Installation (Automated)"
-    # echo "3) Migrate Existing Installation to Docker"
-    read -p "Enter your choice (1-2): " CHOICE
+    echo "3) Migrate Existing Installation to Docker"
+    read -p "Enter your choice (1-3): " CHOICE
 
     case $CHOICE in
         1)
