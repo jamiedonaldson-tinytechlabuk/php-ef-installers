@@ -1,5 +1,42 @@
 #!/bin/bash
 
+# Check if this script is being sourced
+([[ -n $ZSH_EVAL_CONTEXT && $ZSH_EVAL_CONTEXT =~ :file$ ]] || 
+ [[ -n $BASH_VERSION && $0 != "$BASH_SOURCE" ]]) && sourced=1 || sourced=0
+
+if [ $sourced -eq 1 ]; then
+    echo "This script should not be sourced"
+    return 1
+fi
+
+# Function to download and run installer
+download_and_run() {
+    local TEMP_DIR=$(mktemp -d)
+    local SCRIPT_PATH="$TEMP_DIR/installer.sh"
+    
+    # Download the script
+    if ! curl -fsSL https://raw.githubusercontent.com/tinytechlabuk/php-ef-installers/main/Installing-php-ef.sh -o "$SCRIPT_PATH"; then
+        echo "Failed to download installer script"
+        rm -rf "$TEMP_DIR"
+        exit 1
+    fi
+    
+    # Make it executable
+    chmod +x "$SCRIPT_PATH"
+    
+    # Run the script
+    bash "$SCRIPT_PATH"
+    
+    # Clean up
+    rm -rf "$TEMP_DIR"
+}
+
+# If script is downloaded via curl, run the download_and_run function
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]] && [[ -p /dev/stdin ]]; then
+    download_and_run
+    exit $?
+fi
+
 # Ensure script can handle being piped
 exec < /dev/tty
 
