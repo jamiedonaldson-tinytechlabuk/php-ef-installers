@@ -10,7 +10,8 @@ The following Script will install Docker-CE/Docker Compose and make all relevant
 ## Supported OS currently are:
 - Oracle Linux 9
 - RHEL 9
-- Debian (22.04+24.04)
+- Debian
+- Ubuntu (22.04+24.04)
 
 Use the following script to install PHP-ef on your server:
 
