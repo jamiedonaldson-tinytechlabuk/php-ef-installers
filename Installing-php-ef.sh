@@ -68,24 +68,26 @@ install_docker() {
     echo "Installing Docker and Docker Compose..."
     
     if [ "$OS" = "oracle" ] || [ "$OS" = "rhel" ]; then
-        sudo yum install -y yum-utils device-mapper-persistent-data lvm2
-        sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-        sudo yum install -y docker-ce docker-ce-cli containerd.io
+        sudo yum install -y yum-utils device-mapper-persistent-data lvm2 > /dev/null 2>&1
+        sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo > /dev/null 2>&1
+        sudo yum install -y docker-ce docker-ce-cli containerd.io > /dev/null 2>&1
     elif [ "$OS" = "debian" ] || [ "$OS" = "ubuntu" ]; then
-        sudo apt-get update
-        sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-        curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
-        sudo apt-get update
-        sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+        sudo apt-get update > /dev/null 2>&1
+        sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common > /dev/null 2>&1
+        curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg > /dev/null 2>&1
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1
+        sudo apt-get update > /dev/null 2>&1
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io > /dev/null 2>&1
     fi
 
-    sudo systemctl enable docker
-    sudo systemctl start docker
+    echo "Starting Docker service..."
+    sudo systemctl enable docker > /dev/null 2>&1
+    sudo systemctl start docker > /dev/null 2>&1
 
+    echo "Installing Docker Compose..."
     # Install Docker Compose Plugin
-    sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
+    sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)" -o /usr/local/bin/docker-compose > /dev/null 2>&1
+    sudo chmod +x /usr/local/bin/docker-compose > /dev/null 2>&1
 }
 
 # Function to setup Docker configuration
@@ -94,16 +96,18 @@ setup_docker_config() {
     local SECURITY_SALT=$2
     local DOCKER_PATH=${3:-/docker}  # Use third parameter or default to /docker
     
-    echo "Setting up Docker configuration in $DOCKER_PATH..."
-    sudo mkdir -p "$DOCKER_PATH/php-ef/config" "$DOCKER_PATH/php-ef/plugins"
+    echo "Setting up Docker configuration..."
+    sudo mkdir -p "$DOCKER_PATH/php-ef/config" "$DOCKER_PATH/php-ef/plugins" > /dev/null 2>&1
 
+    echo "Downloading configuration files..."
     # Download and configure config.json
     CONFIG_URL="https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/inc/config/config.json.example"
-    sudo curl -L "$CONFIG_URL" -o "$DOCKER_PATH/php-ef/config/config.json"
-    sudo sed -i "s/somesupersecurepasswordhere/$SECURITY_SALT/" "$DOCKER_PATH/php-ef/config/config.json"
+    sudo curl -L "$CONFIG_URL" -o "$DOCKER_PATH/php-ef/config/config.json" > /dev/null 2>&1
+    sudo sed -i "s/somesupersecurepasswordhere/$SECURITY_SALT/" "$DOCKER_PATH/php-ef/config/config.json" > /dev/null 2>&1
 
+    echo "Creating Docker Compose configuration..."
     # Create docker-compose.yml
-    cat <<EOF | sudo tee "$DOCKER_PATH/docker-compose.yml"
+    cat <<EOF | sudo tee "$DOCKER_PATH/docker-compose.yml" > /dev/null 2>&1
 version: '3'
 services:
   php-ef:
@@ -123,11 +127,11 @@ EOF
 # Function to install PHP-EF locally (automated installation from Dockerfile)
 install_local() {
     local OS=$1
-    echo "Installing PHP-EF locally..."
+    echo "Starting local PHP-EF installation..."
     
     # Install dependencies based on OS
     if [ "$OS" = "oracle" ] || [ "$OS" = "rhel" ]; then
-        echo "Installing dependencies for RHEL-based system..."
+        echo "Installing RHEL-based dependencies..."
         sudo yum install -y \
             curl \
             php \
@@ -156,24 +160,26 @@ install_local() {
             nginx \
             redis \
             git \
-            supervisor
+            supervisor > /dev/null 2>&1
 
+        echo "Configuring NGINX for RHEL..."
         # Configure NGINX for RHEL
-        sudo mkdir -p /etc/nginx/conf.d
-        sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/nginx.conf" -o /etc/nginx/nginx.conf
-        sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/conf.d/default.conf" -o /etc/nginx/conf.d/default.conf
+        sudo mkdir -p /etc/nginx/conf.d > /dev/null 2>&1
+        sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/nginx.conf" -o /etc/nginx/nginx.conf > /dev/null 2>&1
+        sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/conf.d/default.conf" -o /etc/nginx/conf.d/default.conf > /dev/null 2>&1
 
     elif [ "$OS" = "debian" ] || [ "$OS" = "ubuntu" ]; then
-        echo "Installing dependencies for Debian/Ubuntu system..."
+        echo "Installing Debian/Ubuntu dependencies..."
         
         # For Ubuntu, we need to add PHP repository
         if [ "$OS" = "ubuntu" ]; then
-            sudo apt-get update
-            sudo apt-get install -y software-properties-common
-            sudo add-apt-repository -y ppa:ondrej/php
+            echo "Adding PHP repository for Ubuntu..."
+            sudo apt-get update > /dev/null 2>&1
+            sudo apt-get install -y software-properties-common > /dev/null 2>&1
+            sudo add-apt-repository -y ppa:ondrej/php > /dev/null 2>&1
         fi
         
-        sudo apt-get update
+        sudo apt-get update > /dev/null 2>&1
         sudo apt-get install -y \
             curl \
             composer \
@@ -195,68 +201,43 @@ install_local() {
             nginx \
             redis-server \
             git \
-            supervisor
+            supervisor > /dev/null 2>&1
 
+        echo "Configuring NGINX for Debian/Ubuntu..."
         # Configure NGINX for Debian/Ubuntu
-        sudo mkdir -p /etc/nginx/conf.d
-        sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/nginx.conf" -o /etc/nginx/nginx.conf
-        sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/conf.d/default.conf" -o /etc/nginx/conf.d/default.conf
+        sudo mkdir -p /etc/nginx/conf.d > /dev/null 2>&1
+        sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/nginx.conf" -o /etc/nginx/nginx.conf > /dev/null 2>&1
+        sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/conf.d/default.conf" -o /etc/nginx/conf.d/default.conf > /dev/null 2>&1
     fi
 
-    # Create and setup web root
-    echo "Setting up web root..."
-    sudo mkdir -p /var/www/html
-    cd /var/www/html
-
+    echo "Setting up PHP-EF application..."
     # Clone PHP-EF repository
-    echo "Cloning PHP-EF repository..."
-    sudo git clone https://github.com/TehMuffinMoo/php-ef.git .
-
-    # Configure PHP-FPM
-    echo "Configuring PHP-FPM..."
-    if [ "$OS" = "debian" ] || [ "$OS" = "ubuntu" ]; then
-        PHP_VERSION="8.3"
-        PHP_INI_DIR="/etc/php/$PHP_VERSION"
-    else
-        PHP_VERSION="php"
-        PHP_INI_DIR="/etc/php"
-    fi
+    sudo git clone https://github.com/TehMuffinMoo/php-ef.git /var/www/html > /dev/null 2>&1
     
-    sudo mkdir -p ${PHP_INI_DIR}/php-fpm.d
-    sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/fpm-pool.conf" -o ${PHP_INI_DIR}/php-fpm.d/www.conf
-    sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/php.ini" -o ${PHP_INI_DIR}/conf.d/custom.ini
+    echo "Configuring permissions..."
+    # Set correct permissions
+    sudo chown -R www-data:www-data /var/www/html > /dev/null 2>&1
+    sudo chmod -R 755 /var/www/html > /dev/null 2>&1
 
-    # Configure Supervisord
-    echo "Configuring Supervisord..."
-    sudo mkdir -p /etc/supervisor/conf.d
-    sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/supervisord.conf" -o /etc/supervisor/conf.d/supervisord.conf
-
-    # Configure Redis
-    echo "Configuring Redis..."
-    sudo mkdir -p /etc/redis
-    sudo curl -L "https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/Docker/config/redis.conf" -o /etc/redis/redis.conf
-
-    # Set permissions
-    echo "Setting permissions..."
-    sudo chown -R www-data:www-data /var/www/html
-    sudo chown -R www-data:www-data /run /var/lib/nginx /var/log/nginx /var/log/redis
-
-    # Configure Cron
-    echo "Setting up cron job..."
-    (sudo crontab -l 2>/dev/null; echo "* * * * * /usr/bin/php /var/www/html/inc/scheduler/scheduler.php") | sudo crontab -
-
-    # Run composer update
-    echo "Running composer update..."
-    cd /var/www/html
-    sudo -u www-data composer update
-
-    # Start services
     echo "Starting services..."
-    sudo systemctl enable nginx php$PHP_VERSION-fpm redis-server supervisor
-    sudo systemctl start nginx php$PHP_VERSION-fpm redis-server supervisor
+    # Start and enable services
+    sudo systemctl enable nginx > /dev/null 2>&1
+    sudo systemctl start nginx > /dev/null 2>&1
+    sudo systemctl enable php8.3-fpm > /dev/null 2>&1
+    sudo systemctl start php8.3-fpm > /dev/null 2>&1
+    sudo systemctl enable redis > /dev/null 2>&1
+    sudo systemctl start redis > /dev/null 2>&1
+
+    # Generate HWID for local installation
+    local HWID=$(generate_random 24)
+    
+    echo "Configuring PHP-EF..."
+    # Configure PHP-EF
+    sudo cp /var/www/html/inc/config/config.json.example /var/www/html/inc/config/config.json > /dev/null 2>&1
+    sudo sed -i "s/somesupersecurepasswordhere/$(generate_random 30)/" /var/www/html/inc/config/config.json > /dev/null 2>&1
 
     echo "Local installation complete!"
-    echo "You can access PHP-EF at http://localhost"
+    echo "Access the web interface at http://localhost"
     echo "Username: admin"
     echo "Password: Admin123!"
     echo "HWID: $HWID"
@@ -325,13 +306,16 @@ main() {
         setup_docker_config "$HWID" "$SECURITY_SALT" "$DOCKER_PATH"
         
         # Start the container
-        cd "$DOCKER_PATH" && sudo docker compose up -d
+        echo "Starting PHP-ef container..."
+        cd "$DOCKER_PATH" && sudo docker compose up -d > /dev/null 2>&1
         
         # Set ownership before starting the container
-        sudo chown -R nobody:nobody "$DOCKER_PATH/php-ef"
+        echo "Setting up permissions..."
+        sudo chown -R nobody:nobody "$DOCKER_PATH/php-ef" > /dev/null 2>&1
 
         # Add daily update cron job
-        (crontab -l 2>/dev/null; echo "0 0 * * * cd $DOCKER_PATH && docker compose pull && docker compose down && docker compose up -d") | sort - | uniq - | crontab -
+        echo "Creating update schedule..."
+        (crontab -l 2>/dev/null; echo "0 0 * * * cd $DOCKER_PATH && docker compose pull && docker compose down && docker compose up -d") | sort - | uniq - | crontab - > /dev/null 2>&1
         
         echo "Installation completed successfully!"
         echo "Access the web interface at http://localhost"
@@ -347,5 +331,5 @@ main() {
 # Run the main installation
 main
 
-# Self-delete the script
-rm -- "$0"
+# Self-delete the script if it exists
+[ -f "$0" ] && rm -- "$0"
