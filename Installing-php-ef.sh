@@ -108,10 +108,10 @@ setup_docker_config() {
     echo "Creating Docker Compose configuration..."
     # Create docker-compose.yml
     cat <<EOF | sudo tee "$DOCKER_PATH/docker-compose.yml" > /dev/null 2>&1
-version: '3'
+#version: '3'
 services:
   php-ef:
-    image: ghcr.io/tehmuffinmoo/php-ef:dev
+    image: ghcr.io/tehmuffinmoo/php-ef:latest
     ports:
       - 80:8080
     environment:
