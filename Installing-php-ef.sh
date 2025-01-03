@@ -92,18 +92,19 @@ install_docker() {
 setup_docker_config() {
     local HWID=$1
     local SECURITY_SALT=$2
+    local DOCKER_PATH=${3:-/docker}  # Use third parameter or default to /docker
     
-    echo "Setting up Docker configuration..."
-    sudo mkdir -p /docker/php-ef/config /docker/php-ef/plugins
-    sudo chown -R nobody:nobody /docker/php-ef
+    echo "Setting up Docker configuration in $DOCKER_PATH..."
+    sudo mkdir -p "$DOCKER_PATH/php-ef/config" "$DOCKER_PATH/php-ef/plugins"
+    sudo chown -R nobody:nobody "$DOCKER_PATH/php-ef"
 
     # Download and configure config.json
     CONFIG_URL="https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/inc/config/config.json.example"
-    sudo curl -L "$CONFIG_URL" -o /docker/php-ef/config/config.json
-    sudo sed -i "s/somesupersecurepasswordhere/$SECURITY_SALT/" /docker/php-ef/config/config.json
+    sudo curl -L "$CONFIG_URL" -o "$DOCKER_PATH/php-ef/config/config.json"
+    sudo sed -i "s/somesupersecurepasswordhere/$SECURITY_SALT/" "$DOCKER_PATH/php-ef/config/config.json"
 
     # Create docker-compose.yml
-    cat <<EOF | sudo tee /docker/docker-compose.yml
+    cat <<EOF | sudo tee "$DOCKER_PATH/docker-compose.yml"
 version: '3'
 services:
   php-ef:
@@ -283,65 +284,57 @@ migrate_to_docker() {
 
 # Main installation script
 main() {
-    OS=$(detect_os)
+    local OS=$(detect_os)
+    local INSTALL_TYPE=""
+    local DOCKER_PATH="/docker"  # Default docker path
+
+    # Check if OS is supported
     if [ "$OS" = "unsupported" ]; then
-        echo "Unsupported OS. Only Oracle Linux, RHEL-based, Debian-based, and Ubuntu-based distributions are supported."
+        echo "Unsupported operating system"
         exit 1
     fi
 
-    echo "Welcome to PHP-EF Installer"
-    echo "Please select installation type:"
-    echo "1) Docker Installation (Recommended)"
-    echo "2) Local Installation (Automated)"
-    echo "3) Migrate Existing Installation to Docker"
-    
-    # Ensure we can read user input even when piped
-    CHOICE=""
-    while [[ ! $CHOICE =~ ^[1-3]$ ]]; do
-        read -p "Enter your choice (1-3): " CHOICE
-        if [[ ! $CHOICE =~ ^[1-3]$ ]]; then
-            echo "Please enter a valid choice (1, 2, or 3)"
-        fi
+    # Ask for installation type
+    while [ -z "$INSTALL_TYPE" ]; do
+        echo "Please select installation type:"
+        echo "1) Docker (Recommended)"
+        echo "2) Local Installation"
+        read -p "Enter your choice (1 or 2): " choice
+        
+        case $choice in
+            1) INSTALL_TYPE="docker";;
+            2) INSTALL_TYPE="local";;
+            *) echo "Invalid choice. Please enter 1 or 2.";;
+        esac
     done
 
-    case $CHOICE in
-        1)
-            echo "Starting Docker installation..."
-            install_docker "$OS"
-            HWID=$(generate_random 24)
-            SECURITY_SALT=$(generate_random 30)
-            setup_docker_config "$HWID" "$SECURITY_SALT"
-            echo "Starting PHP-ef container..."
-            sudo docker compose -f /docker/docker-compose.yml up -d
-            ;;
-        2)
-            echo "Starting automated local installation..."
-            install_local "$OS"
-            ;;
-        3)
-            read -p "Enter the path to your existing PHP-EF installation: " EXISTING_PATH
-            if [ ! -d "$EXISTING_PATH" ]; then
-                echo "Directory does not exist!"
-                exit 1
-            fi
-            install_docker "$OS"
-            migrate_to_docker "$EXISTING_PATH"
-            echo "Starting migrated PHP-ef container..."
-            sudo docker compose -f /docker/docker-compose.yml up -d
-            ;;
-        *)
-            echo "Invalid choice!"
-            exit 1
-            ;;
-    esac
+    if [ "$INSTALL_TYPE" = "docker" ]; then
+        # Ask for custom docker path
+        read -p "Enter custom Docker installation path (press Enter for default '/docker'): " custom_path
+        if [ ! -z "$custom_path" ]; then
+            DOCKER_PATH="$custom_path"
+        fi
 
-    # Add cron job for Docker installations
-    if [ "$CHOICE" = "1" ] || [ "$CHOICE" = "3" ]; then
-        echo "Creating cron job for daily updates..."
-        (crontab -l 2>/dev/null; echo "0 0 * * * docker compose -f /docker/docker-compose.yml pull && docker compose -f /docker/docker-compose.yml down && docker compose -f /docker/docker-compose.yml up -d") | crontab -
+        # Generate random strings for HWID and Security Salt
+        local HWID=$(generate_random 24)
+        local SECURITY_SALT=$(generate_random 30)
+        
+        install_docker "$OS"
+        setup_docker_config "$HWID" "$SECURITY_SALT" "$DOCKER_PATH"
+        
+        # Start the container
+        cd "$DOCKER_PATH" && sudo docker compose up -d
+        
+        # Add daily update cron job
+        (crontab -l 2>/dev/null; echo "0 0 * * * cd $DOCKER_PATH && docker compose pull && docker compose down && docker compose up -d") | sort - | uniq - | crontab -
+        
+        echo "Installation completed successfully!"
+        echo "HWID: $HWID"
+        echo "Access the web interface at http://localhost"
+        
+    elif [ "$INSTALL_TYPE" = "local" ]; then
+        install_local "$OS"
     fi
-
-    echo "Installation complete!"
 }
 
 # Run the main installation

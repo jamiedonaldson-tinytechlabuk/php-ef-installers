@@ -23,6 +23,7 @@ curl -fsSL https://raw.githubusercontent.com/tinytechlabuk/php-ef-installers/mai
 chmod +x install.sh && ./install.sh
 ```
 
+During the Docker installation, you will be prompted to enter a custom installation path. Press Enter to use the default path `/docker`, or specify your preferred path (e.g., `/opt/php-ef-docker`).
 
 ## Note that the script will autogenerate HWID and Security Salt for the Installation:
 - Security Salt
