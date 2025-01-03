@@ -321,12 +321,12 @@ main() {
         install_docker "$OS"
         setup_docker_config "$HWID" "$SECURITY_SALT" "$DOCKER_PATH"
         
-        # Set ownership before starting the container
-        sudo chown -R nobody:nobody "$DOCKER_PATH/php-ef"
-        
         # Start the container
         cd "$DOCKER_PATH" && sudo docker compose up -d
         
+        # Set ownership before starting the container
+        sudo chown -R nobody:nobody "$DOCKER_PATH/php-ef"
+
         # Add daily update cron job
         (crontab -l 2>/dev/null; echo "0 0 * * * cd $DOCKER_PATH && docker compose pull && docker compose down && docker compose up -d") | sort - | uniq - | crontab -
         
