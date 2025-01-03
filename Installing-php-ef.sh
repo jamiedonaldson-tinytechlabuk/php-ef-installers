@@ -96,7 +96,6 @@ setup_docker_config() {
     
     echo "Setting up Docker configuration in $DOCKER_PATH..."
     sudo mkdir -p "$DOCKER_PATH/php-ef/config" "$DOCKER_PATH/php-ef/plugins"
-    sudo chown -R nobody:nobody "$DOCKER_PATH/php-ef"
 
     # Download and configure config.json
     CONFIG_URL="https://raw.githubusercontent.com/TehMuffinMoo/php-ef/main/inc/config/config.json.example"
@@ -321,6 +320,9 @@ main() {
         
         install_docker "$OS"
         setup_docker_config "$HWID" "$SECURITY_SALT" "$DOCKER_PATH"
+        
+        # Set ownership before starting the container
+        sudo chown -R nobody:nobody "$DOCKER_PATH/php-ef"
         
         # Start the container
         cd "$DOCKER_PATH" && sudo docker compose up -d
