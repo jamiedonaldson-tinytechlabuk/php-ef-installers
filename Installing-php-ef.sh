@@ -257,6 +257,9 @@ install_local() {
 
     echo "Local installation complete!"
     echo "You can access PHP-EF at http://localhost"
+    echo "Username: admin"
+    echo "Password: Admin123!"
+    echo "HWID: $HWID"
 }
 
 # Function to migrate existing installation to Docker
@@ -331,8 +334,10 @@ main() {
         (crontab -l 2>/dev/null; echo "0 0 * * * cd $DOCKER_PATH && docker compose pull && docker compose down && docker compose up -d") | sort - | uniq - | crontab -
         
         echo "Installation completed successfully!"
-        echo "HWID: $HWID"
         echo "Access the web interface at http://localhost"
+        echo "Username: admin"
+        echo "Password: Admin123!"
+        echo "HWID: $HWID"
         
     elif [ "$INSTALL_TYPE" = "local" ]; then
         install_local "$OS"
