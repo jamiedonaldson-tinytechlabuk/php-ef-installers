@@ -106,6 +106,7 @@ setup_docker_config() {
     local HWID=$1
     local SECURITY_SALT=$2
     local DOCKER_PATH=${3:-/docker}  # Use third parameter or default to /docker
+    local CONTAINER_NAME=${4:-php-ef}  # Use fourth parameter or default to php-ef
     
     echo "Setting up Docker configuration..."
     sudo mkdir -p "$DOCKER_PATH/php-ef/config" "$DOCKER_PATH/php-ef/plugins" > /dev/null 2>&1
@@ -121,8 +122,9 @@ setup_docker_config() {
     cat <<EOF | sudo tee "$DOCKER_PATH/docker-compose.yml" > /dev/null 2>&1
 #version: '3'
 services:
-  php-ef:
+  $CONTAINER_NAME:
     image: ghcr.io/tehmuffinmoo/php-ef:latest
+    container_name: $CONTAINER_NAME
     ports:
       - 80:8080
     environment:
@@ -319,12 +321,20 @@ main() {
             DOCKER_PATH="$custom_path"
         fi
 
+        # Ask for custom container name
+        read -p "Enter custom container name (press Enter for default 'php-ef'): " container_name
+        if [ ! -z "$container_name" ]; then
+            CONTAINER_NAME="$container_name"
+        else
+            CONTAINER_NAME="php-ef"
+        fi
+
         # Generate random strings for HWID and Security Salt
         local HWID=$(generate_random 24)
         local SECURITY_SALT=$(generate_random 30)
         
         install_docker "$OS"
-        setup_docker_config "$HWID" "$SECURITY_SALT" "$DOCKER_PATH"
+        setup_docker_config "$HWID" "$SECURITY_SALT" "$DOCKER_PATH" "$CONTAINER_NAME"
         
         # Start the container
         echo "Starting PHP-ef container..."
