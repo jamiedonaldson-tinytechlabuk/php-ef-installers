@@ -346,3 +346,6 @@ main() {
 
 # Run the main installation
 main
+
+# Self-delete the script
+rm -- "$0"
