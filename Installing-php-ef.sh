@@ -62,6 +62,17 @@ generate_random() {
     head /dev/urandom | tr -dc A-Za-z0-9 | head -c $1
 }
 
+# Function to handle colored output
+print_message() {
+    local color=$1
+    local message=$2
+    case $color in
+        "green")  echo -e "\033[32m${message}\033[0m" ;;
+        "red")    echo -e "\033[31m${message}\033[0m" ;;
+        *)        echo "${message}" ;;
+    esac
+}
+
 # Function to install Docker and Docker Compose
 install_docker() {
     local OS=$1
@@ -162,6 +173,11 @@ install_local() {
             git \
             supervisor > /dev/null 2>&1
 
+        if [ $? -ne 0 ]; then
+            print_message "red" "Failed to install dependencies"
+            exit 1
+        fi
+
         echo "Configuring NGINX for RHEL..."
         # Configure NGINX for RHEL
         sudo mkdir -p /etc/nginx/conf.d > /dev/null 2>&1
@@ -203,6 +219,11 @@ install_local() {
             git \
             supervisor > /dev/null 2>&1
 
+        if [ $? -ne 0 ]; then
+            print_message "red" "Failed to install dependencies"
+            exit 1
+        fi
+
         echo "Configuring NGINX for Debian/Ubuntu..."
         # Configure NGINX for Debian/Ubuntu
         sudo mkdir -p /etc/nginx/conf.d > /dev/null 2>&1
@@ -236,11 +257,11 @@ install_local() {
     sudo cp /var/www/html/inc/config/config.json.example /var/www/html/inc/config/config.json > /dev/null 2>&1
     sudo sed -i "s/somesupersecurepasswordhere/$(generate_random 30)/" /var/www/html/inc/config/config.json > /dev/null 2>&1
 
-    echo "Local installation complete!"
-    echo "Access the web interface at http://localhost"
-    echo "Username: admin"
-    echo "Password: Admin123!"
-    echo "HWID: $HWID"
+    print_message "green" "Local installation complete!"
+    print_message "green" "Access the web interface at http://localhost"
+    print_message "green" "Username: admin"
+    print_message "green" "Password: Admin123!"
+    print_message "green" "HWID: $HWID"
 }
 
 # Function to migrate existing installation to Docker
@@ -273,7 +294,7 @@ main() {
 
     # Check if OS is supported
     if [ "$OS" = "unsupported" ]; then
-        echo "Unsupported operating system"
+        print_message "red" "Unsupported operating system"
         exit 1
     fi
 
@@ -317,11 +338,11 @@ main() {
         echo "Creating update schedule..."
         (crontab -l 2>/dev/null; echo "0 0 * * * cd $DOCKER_PATH && docker compose pull && docker compose down && docker compose up -d") | sort - | uniq - | crontab - > /dev/null 2>&1
         
-        echo "Installation completed successfully!"
-        echo "Access the web interface at http://localhost"
-        echo "Username: admin"
-        echo "Password: Admin123!"
-        echo "HWID: $HWID"
+        print_message "green" "Installation completed successfully!"
+        print_message "green" "Access the web interface at http://localhost"
+        print_message "green" "Username: admin"
+        print_message "green" "Password: Admin123!"
+        print_message "green" "HWID: $HWID"
         
     elif [ "$INSTALL_TYPE" = "local" ]; then
         install_local "$OS"
